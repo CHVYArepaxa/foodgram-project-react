@@ -1,0 +1,35 @@
+version: '3'
+
+volumes:
+  pg_data_test:
+  static:
+  media:
+
+services:
+  db:
+    image: postgres:13
+    env_file: .env
+    volumes:
+      - pg_data_test:/var/lib/postgresql/data
+  backend:
+    image: chvyarepaxa/foodgram_backend
+    env_file: .env
+    volumes:
+      - static:/static/
+      - media:/app/media/
+    depends_on:
+            - db
+  frontend:
+    env_file: .env
+    image: chvyarepaxa/foodgram_frontend
+    command: cp -r /app/build/. /static/
+    volumes:
+      - static:/static
+  gateway:
+    image: chvyarepaxa/foodgram_gateway
+    env_file: .env
+    ports:
+      - 8000:80
+    volumes:
+      - static:/static
+      - media:/app/media/
