@@ -25,7 +25,9 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'default')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['158.160.82.35', '127.0.0.1', 'localhost', 'foodgram-ilya.ddns.net',]
+CSRF_TRUSTED_ORIGINS = ['https://foodgram-ilya.ddns.net']
+
+ALLOWED_HOSTS = ['158.160.82.35', '127.0.0.1', 'localhost', 'foodgram-ilya.ddns.net']
 
 
 USERNAME_CHARSET = r"^[\w.@+-]+$"
