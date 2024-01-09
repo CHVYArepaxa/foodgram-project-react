@@ -2,40 +2,27 @@ from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator
 from django.db import models
 
+from helpfiles import constants
+from helpfiles.Basemodel import BaseModelMixin
+
 User = get_user_model()
-
-
-class BaseModelMixin(models.Model):
-    created = models.DateTimeField(
-        verbose_name="Создано",
-        auto_now_add=True,
-        auto_now=False,
-    )
-    modified = models.DateTimeField(
-        verbose_name="Изменено",
-        auto_now=True,
-        auto_now_add=False,
-    )
-
-    class Meta:
-        abstract = True
 
 
 class Tag(BaseModelMixin):
     name = models.CharField(
         verbose_name="Название",
-        max_length=200,
+        max_length=constants.NAME_MAX_LEN,
         unique=True,
         null=False,
     )
     color = models.CharField(
         verbose_name="Цвет",
-        max_length=7,
+        max_length=constants.COLOR_MAX_LEN,
         null=True,
     )
     slug = models.SlugField(
         verbose_name="слаг",
-        max_length=200,
+        max_length=constants.SLUG_MAX_LEN,
         unique=True,
     )
 
@@ -51,7 +38,7 @@ class Tag(BaseModelMixin):
 class MeasurementUnit(BaseModelMixin):
     measurement_unit = models.CharField(
         verbose_name="Единица измерения",
-        max_length=200,
+        max_length=constants.NAME_MAX_LEN,
         unique=True,
     )
 
@@ -72,7 +59,7 @@ class Ingredient(BaseModelMixin):
     )
     name = models.CharField(
         verbose_name="Название",
-        max_length=200,
+        max_length=constants.NAME_MAX_LEN,
     )
 
     class Meta:
@@ -118,7 +105,7 @@ class Recipe(BaseModelMixin):
     )
     name = models.CharField(
         verbose_name="Название",
-        max_length=200,
+        max_length=constants.NAME_MAX_LEN,
     )
     image = models.ImageField(
         verbose_name="Изображение",

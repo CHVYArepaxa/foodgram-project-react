@@ -34,7 +34,7 @@ class Command(BaseCommand):
         try:
             MeasurementUnit.objects.bulk_create(bulk_measurement_unit)
         except IntegrityError:
-            print(
+            self.stdout.write(
                 "Импорт окончился ошибкой. Проверьте единицы измерения на "
                 "уникальность"
             )
@@ -53,13 +53,13 @@ class Command(BaseCommand):
         try:
             Ingredient.objects.bulk_create(bulk_ingredients)
         except IntegrityError:
-            print(
+            self.stdout.write(
                 "Импорт окончился ошибкой. Проверьте ингредиенты на "
                 "уникальность"
             )
             raise
 
-        print(
+        self.stdout.write(
             f"Импорт прошел успешно добавлено {len(bulk_ingredients)} "
             f"ингредиентов и {len(bulk_measurement_unit)} единиц измерения"
         )

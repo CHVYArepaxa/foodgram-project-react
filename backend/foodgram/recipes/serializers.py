@@ -4,6 +4,7 @@ from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
 from django.db import transaction
 
+from helpfiles import constants
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from users.serializers import UserSerializer
@@ -76,7 +77,7 @@ class IngredientsRecipesWriteSerializer(serializers.ModelSerializer):
 
     def validate_amount(self, value):
         """Валидация поля количество"""
-        if value < 1:
+        if value < constants.MIN_INGREDIENT_AMOUNT:
             raise serializers.ValidationError("должно быть 1 или больше")
         return value
 
@@ -144,14 +145,6 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
             "cooking_time",
             "author",
         )
-        extra_kwargs = {
-            "ingredients": {"required": True, "allow_blank": False},
-            "tags": {"required": True, "allow_blank": False},
-            "name": {"required": True, "allow_blank": False},
-            "text": {"required": True, "allow_blank": False},
-            "image": {"required": True, "allow_blank": False},
-            "cooking_time": {"required": True},
-        }
 
     def validate(self, attrs):
         """Валидация"""

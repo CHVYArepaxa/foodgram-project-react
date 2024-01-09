@@ -2,23 +2,10 @@ from django.contrib.auth.models import AbstractUser
 from django.core.validators import RegexValidator
 from django.db import models
 
+from helpfiles import constants
+from helpfiles.Basemodel import BaseModelMixin
+
 from foodgram.settings import USERNAME_CHARSET
-
-
-class BaseModelMixin(models.Model):
-    created = models.DateTimeField(
-        verbose_name="Создано",
-        auto_now_add=True,
-        auto_now=False,
-    )
-    modified = models.DateTimeField(
-        verbose_name="Изменено",
-        auto_now=True,
-        auto_now_add=False,
-    )
-
-    class Meta:
-        abstract = True
 
 
 class User(AbstractUser, BaseModelMixin):
@@ -26,13 +13,13 @@ class User(AbstractUser, BaseModelMixin):
         verbose_name="Почта",
         null=False,
         unique=True,
-        max_length=254,
+        max_length=constants.EMAIL_MAX_LEN,
     )
     username = models.CharField(
         verbose_name="Имя пользователя",
         unique=True,
         null=False,
-        max_length=150,
+        max_length=constants.USERNAME_MAX_LEM,
         validators=[
             RegexValidator(
                 USERNAME_CHARSET,
@@ -43,12 +30,12 @@ class User(AbstractUser, BaseModelMixin):
     first_name = models.CharField(
         verbose_name="Имя",
         null=False,
-        max_length=150,
+        max_length=constants.FIRST_NAME_MAX_LEN,
     )
     last_name = models.CharField(
         verbose_name="Фамилия",
         null=False,
-        max_length=150,
+        max_length=constants.LAST_NAME_MAX_LEN,
     )
     subscriptions = models.ManyToManyField(
         "User",
@@ -56,6 +43,8 @@ class User(AbstractUser, BaseModelMixin):
         verbose_name="Подписки",
         through="Sub",
     )
+    USERNAME_FIELD = "email"
+    REQUIRED_FIELDS = ["first_name", "last_name", "username"]
 
     class Meta:
         verbose_name = "Пользователь"

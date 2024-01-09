@@ -51,12 +51,35 @@ class IngredientViewSet(RetrieveModelMixin, ListModelMixin, GenericViewSet):
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
-    queryset = Recipe.objects.all()
     pagination_class = FoodgramPaginator
     permission_classes = [IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly]
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
     http_method_names = ["get", "post", "patch", "create", "delete"]
+
+    def get_queryset(self):
+        queryset = Recipe.objects.all().select_related(
+            'author'
+        ).prefetch_related(
+            'tags', 'ingredients', 'favorites', 'shopping_cart'
+        )
+
+        if self.request.user.is_authenticated:
+            subquery_favorites = Favorite.objects.filter(
+                recipe=models.OuterRef('pk'), user=self.request.user
+            )
+            subquery_shopping_cart = Favorite.objects.filter(
+                recipe=models.OuterRef('pk'), user=self.request.user
+            )
+            return queryset.annotate(
+                is_favorited=models.Exists(subquery_favorites),
+                is_in_shopping_cart=models.Exists(subquery_shopping_cart),
+            )
+
+        return queryset.annotate(
+            is_favorited=models.Value(False),
+            is_in_shopping_cart=models.Value(False),
+        )
 
     def get_serializer_class(self):
         if self.action in ("list", "retrieve"):
@@ -65,25 +88,27 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     @action(
         detail=True,
-        methods=["post", "delete"],
+        methods=["post"],
         permission_classes=[IsAuthenticated],
     )
     def favorite(self, request, pk):
-        if request.method == "POST":
-            return self.add_to(Favorite, request.user, pk)
-        else:
-            return self.delete_from(Favorite, request.user, pk)
+        return self.add_to(Favorite, request.user, pk)
+
+    @favorite.mapping.delete
+    def delete_favorite(self, request, pk):
+        return self.delete_from(Favorite, request.user, pk)
 
     @action(
         detail=True,
-        methods=["post", "delete"],
+        methods=["post"],
         permission_classes=[IsAuthenticated],
     )
     def shopping_cart(self, request, pk):
-        if request.method == "POST":
-            return self.add_to(ShoppingCart, request.user, pk)
-        else:
-            return self.delete_from(ShoppingCart, request.user, pk)
+        return self.add_to(ShoppingCart, request.user, pk)
+
+    @shopping_cart.mapping.delete
+    def delete_shopping_cart(self, request, pk):
+        return self.delete_from(ShoppingCart, request.user, pk)
 
     def add_to(self, model, user, pk):
         if model.objects.filter(user=user, recipe__id=pk).exists():
