@@ -23,7 +23,6 @@ class ShortRecipeSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-
     is_subscribed = serializers.SerializerMethodField(read_only=True)
 
     class Meta:

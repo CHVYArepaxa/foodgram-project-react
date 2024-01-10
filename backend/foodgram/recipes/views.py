@@ -7,7 +7,7 @@ from reportlab.lib.pagesizes import A4
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen.canvas import Canvas
-from rest_framework import status, viewsets
+from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.mixins import ListModelMixin, RetrieveModelMixin
 from rest_framework.permissions import (
@@ -53,32 +53,34 @@ class IngredientViewSet(RetrieveModelMixin, ListModelMixin, GenericViewSet):
 class RecipeViewSet(viewsets.ModelViewSet):
     pagination_class = FoodgramPaginator
     permission_classes = [IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly]
-    filter_backends = (DjangoFilterBackend,)
+    filter_backends = (
+        DjangoFilterBackend,
+        filters.OrderingFilter,
+    )
     filterset_class = RecipeFilter
     http_method_names = ["get", "post", "patch", "create", "delete"]
 
     def get_queryset(self):
-        queryset = Recipe.objects.all().select_related(
-            'author'
-        ).prefetch_related(
-            'tags', 'ingredients', 'favorites', 'shopping_cart'
-        )
-
         if self.request.user.is_authenticated:
-            subquery_favorites = Favorite.objects.filter(
-                recipe=models.OuterRef('pk'), user=self.request.user
+            is_favorited = Favorite.objects.filter(
+                recipe=models.OuterRef("pk"), user=self.request.user
             )
-            subquery_shopping_cart = Favorite.objects.filter(
-                recipe=models.OuterRef('pk'), user=self.request.user
+            is_in_shopping_cart = ShoppingCart.objects.filter(
+                recipe=models.OuterRef("pk"), user=self.request.user
             )
-            return queryset.annotate(
-                is_favorited=models.Exists(subquery_favorites),
-                is_in_shopping_cart=models.Exists(subquery_shopping_cart),
+        else:
+            is_favorited = Favorite.objects.none()
+            is_in_shopping_cart = ShoppingCart.objects.none()
+        return (
+            Recipe.objects.all()
+            .select_related("author")
+            .prefetch_related(
+                "tags", "ingredients", "favorites", "shopping_cart"
             )
-
-        return queryset.annotate(
-            is_favorited=models.Value(False),
-            is_in_shopping_cart=models.Value(False),
+            .annotate(
+                is_favorited=models.Exists(is_favorited),
+                is_in_shopping_cart=models.Exists(is_in_shopping_cart),
+            )
         )
 
     def get_serializer_class(self):

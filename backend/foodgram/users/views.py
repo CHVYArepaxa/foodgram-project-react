@@ -27,7 +27,6 @@ class UserViewSet(
     mixins.RetrieveModelMixin,
     GenericViewSet,
 ):
-
     queryset = User.objects.all().prefetch_related(
         "recipes", "recipes__ingredients", "recipes__tags"
     )
