@@ -2,7 +2,7 @@ import base64
 
 from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
-from django.db import transaction
+from django.db import models, transaction
 
 from helpfiles import constants
 from rest_framework import serializers
@@ -107,22 +107,6 @@ class RecipeReadSerializer(serializers.ModelSerializer):
             "cooking_time",
         )
 
-    def get_is_favorited(self, obj):
-        return (
-            self.context.get("request").user.is_authenticated
-            and Favorite.objects.filter(
-                user=self.context["request"].user, recipe=obj
-            ).exists()
-        )
-
-    def get_is_in_shopping_cart(self, obj):
-        return (
-            self.context.get("request").user.is_authenticated
-            and ShoppingCart.objects.filter(
-                user=self.context["request"].user, recipe=obj
-            ).exists()
-        )
-
 
 class RecipeWriteSerializer(serializers.ModelSerializer):
     tags = serializers.PrimaryKeyRelatedField(
@@ -217,5 +201,12 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
-    def to_representation(self, instance):
-        return RecipeReadSerializer(instance, context=self.context).data
+    def to_representation(self, value):
+        is_favorited = Favorite.objects.none()
+        is_in_shopping_cart = ShoppingCart.objects.none()
+        value = Recipe.objects.filter(id=value.id).annotate(
+            is_favorited=models.Exists(is_favorited),
+            is_in_shopping_cart=models.Exists(is_in_shopping_cart)
+        ).first()
+        serializer = RecipeReadSerializer(value, context=self.context)
+        return serializer.data
