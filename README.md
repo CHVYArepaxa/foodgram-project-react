@@ -8,11 +8,6 @@ python, docker, postgreSQL, nginx, gunicorn, django, DRF, djoser, JSON, YAML, po
 # Данные для подключения
 Адрес: https://foodgram-ilya.ddns.net
 
-Учетная запись пользователя с правами администратора:
-
-Логин: ilya
-
-Пароль: zxcqwerty
 
 # Как запустить проект
 Клонировать репозиторий и перейти в него в командной строке:
